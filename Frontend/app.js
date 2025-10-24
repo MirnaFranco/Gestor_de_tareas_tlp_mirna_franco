@@ -1,4 +1,4 @@
-const API_BASE = '/api/tasks';
+const API_BASE = '/api/tasks/';
 const form = document.getElementById('taskForm');
 const tasksList = document.getElementById('tasksList');
 const statusDiv = document.getElementById('status');
@@ -59,7 +59,7 @@ tasksList.addEventListener('click', async (e) => {
   if (e.target.classList.contains('del')) {
     if (!confirm('Eliminar tarea?')) return;
     try {
-      const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE}${id}`, { method: 'DELETE' });
       if (!res.ok && res.status !== 204) throw new Error('Error borrando');
       await fetchTasks();
     } catch (err) {
@@ -70,7 +70,7 @@ tasksList.addEventListener('click', async (e) => {
     const newTitulo = prompt('Nuevo título');
     if (!newTitulo) return;
     try {
-      const res = await fetch(`${API_BASE}/${id}`, {
+      const res = await fetch(`${API_BASE}${id}`, {
         method: 'PUT',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ titulo: newTitulo })

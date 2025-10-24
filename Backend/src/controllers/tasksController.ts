@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import pool from '../src/db';
+import { pool, initializeDatabase } from '../db.js';
 import type { CreateTaskDTO, UpdateTaskDTO } from '../types/task.js';
 
 // Listar todas las tareas

@@ -1,76 +1,50 @@
-version: "3.8"
+version: "3.9"
 
 services:
   db:
-    image: mysql:8.0
-    container_name: tasks_mysql
-    restart: unless-stopped
+    image: mysql:8
+    container_name: tasks_db
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tasks_db
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "3306:3306" # opcional (para debug local)
+      - db_data:/var/lib/mysql
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - app-network
+      - tasks_network
 
   api:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    build: ./backend
     container_name: tasks_api
-    restart: unless-stopped
-    env_file:
-      - .env
+    restart: always
     environment:
-      - NODE_ENV=production
-      - PORT=${API_PORT:-3000}
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USER=${MYSQL_USER}
-      - DB_PASSWORD=${MYSQL_PASSWORD}
-      - DB_NAME=${MYSQL_DATABASE}
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: tasks_db
     depends_on:
       - db
-    networks:
-      - app-network
     ports:
-      - "${API_PORT:-3000}:${API_PORT:-3000}" # opcional: exponer para debug
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: tasks_frontend
-    restart: unless-stopped
-    depends_on:
-      - api
+      - "3000:3000"
     networks:
-      - app-network
-    # No exponer puerto: nginx servirá los archivos estáticos
+      - tasks_network
 
   nginx:
-    image: nginx:stable-alpine
+    image: nginx:alpine
     container_name: tasks_nginx
-    restart: unless-stopped
     ports:
-      - "80:80"
+      - "5000:80"
     volumes:
+      - ./frontend:/usr/share/nginx/html:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./frontend/dist:/usr/share/nginx/html:ro
     depends_on:
-      - frontend
       - api
     networks:
-      - app-network
-
-volumes:
-  mysql_data:
+      - tasks_network
 
 networks:
-  app-network:
-    driver: bridge
+  tasks_network:
+
+volumes:
+  db_data:
